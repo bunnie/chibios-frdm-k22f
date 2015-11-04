@@ -97,6 +97,8 @@ LDSCRIPT= $(STARTUPLD)/MK22FN512.ld
 CSRC = main.c \
        orchard-shell.c \
        orchard-vectors.c \
+       orchard-events.c \
+       $(wildcard cmd-*.c) \
        gitversion.c \
        $(STARTUPSRC) \
        $(PORTSRC) \

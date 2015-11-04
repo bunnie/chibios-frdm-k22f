@@ -18,16 +18,28 @@
 
 #define KINETIS_XTAL_FREQUENCY      8000000UL
 
+/* Enable clock initialization by HAL */
+#define KINETIS_NO_INIT             FALSE
+
 /*
  * HAL driver system settings.
  */
 
 /* Select the MCU clocking mode below by enabling the appropriate block. */
 
-/* FEI mode */
+/* PEE mode - external 8 MHz crystal with PLL for 48 MHz core/system clock. */
+#if 1
+#define KINETIS_MCG_MODE            KINETIS_MCG_MODE_PEE
+#define KINETIS_XTAL_FREQUENCY      8000000UL
+#define KINETIS_SYSCLK_FREQUENCY    48000000UL // note that 48MHz is hard-coded in hal_lld.c
+#endif
+
+/* FEI mode - 48 MHz with internal 32.768 kHz oscillator */
 #if 0
 #define KINETIS_MCG_MODE            KINETIS_MCG_MODE_FEI
-#define KINETIS_SYSCLK_FREQUENCY    21000000UL
+#define KINETIS_MCG_FLL_DMX32       1           /* Fine-tune for 32.768 kHz */
+#define KINETIS_MCG_FLL_DRS         1           /* 1464x FLL factor */
+#define KINETIS_SYSCLK_FREQUENCY    47972352UL  /* 32.768 kHz * 1464 (~48 MHz) */
 #endif /* 0 */
 
 /* FEE mode - 24 MHz with external 32.768 kHz crystal */
@@ -56,7 +68,7 @@
 /*
  * SERIAL driver system settings.
  */
-#define KINETIS_SERIAL_USE_UART0              TRUE
+#define KINETIS_SERIAL_USE_UART1              TRUE
 
 /*
  * EXTI driver system settings.
@@ -96,11 +108,12 @@
  */
 
 
-/* KL16 32pin  */
+/* KL22FN512  */
 #define KINETIS_EXT_PORTA_WIDTH                 32
-#define KINETIS_EXT_PORTB_WIDTH                 0 /* PORTB can't generate IRQ */
+#define KINETIS_EXT_PORTB_WIDTH                 32
 #define KINETIS_EXT_PORTC_WIDTH                 32
 #define KINETIS_EXT_PORTD_WIDTH                 32
+#define KINETIS_EXT_PORTE_WIDTH                 32
 
 #ifndef KINETIS_EXT_PORTA_WIDTH
 #define KINETIS_EXT_PORTA_WIDTH                 0

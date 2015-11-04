@@ -103,7 +103,11 @@ int main(void)
   halInit();
   chSysInit();
 
+  evtTableInit(orchard_events, 32);
+
   orchardShellInit();
+
+  orchardEventsStart();
 
   evtTableHook(orchard_events, shell_terminated, shell_termination_handler);
 

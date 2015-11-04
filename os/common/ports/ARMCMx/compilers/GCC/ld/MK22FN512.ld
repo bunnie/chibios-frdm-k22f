@@ -71,6 +71,7 @@ SECTIONS
   {
     *(.text)
     *(.text.*)
+    KEEP(*(SORT(.chibi_list*)));
     *(.rodata)
     *(.rodata.*)
     *(.glue_7t)
