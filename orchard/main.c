@@ -17,6 +17,7 @@
 #include "ch.h"
 #include "hal.h"
 #include "i2c.h"
+#include "i2s.h"
 
 #include "shell.h"
 #include "chprintf.h"
@@ -30,6 +31,66 @@ struct evt_table orchard_events;
 static const I2CConfig i2c_config = {
   100000
 };
+
+static I2SConfig i2s_config = {
+  NULL,
+  NULL,
+  0,
+  NULL,
+  { // sai_tx_state
+    {48000u, KINETIS_SYSCLK_FREQUENCY /*mclk freq*/, 18, kSaiStereo},
+    NULL,
+    0,
+    0,
+    NULL,
+    NULL,
+    kSaiModeAsync,
+    0,
+    4,
+    kSaiMaster,
+    kSaiBusI2SType,
+    //    NULL,  // semaphore_t
+    FALSE,
+    0,
+  },
+  { // sai_rx_state
+    {48000u, KINETIS_SYSCLK_FREQUENCY /*mclk freq*/, 18, kSaiStereo},
+    NULL,
+    0,
+    0,
+    NULL,
+    NULL,
+    kSaiModeSync,
+    0,
+    4,
+    kSaiMaster,
+    kSaiBusI2SType,
+    //    NULL,  // semaphore_t
+    FALSE,
+    0,
+  },
+  { // tx_userconfig
+    kSaiMclkSourceSysclk,
+    0,
+    kSaiModeAsync,
+    kSaiBusI2SType,
+    kSaiMaster,
+    kSaiBclkSourceMclkDiv,
+    4,
+    0,
+  },
+  { // rx_userconfig
+    kSaiMclkSourceSysclk,
+    0,
+    kSaiModeSync,
+    kSaiBusI2SType,
+    kSaiMaster,
+    kSaiBclkSourceMclkDiv,
+    4,
+    0,
+  }
+};
+
 
 static void shell_termination_handler(eventid_t id) {
   static int i = 1;
@@ -87,7 +148,6 @@ static void print_mcu_info(void) {
                    pins[(sdid >> 0) & 15]);
 }
 
-
 /*
  * Application entry point.
  */
@@ -102,6 +162,8 @@ int main(void)
    */
   halInit();
   chSysInit();
+
+  i2sStart(&I2SD1, (const I2SConfig *) &i2s_config);
 
   evtTableInit(orchard_events, 32);
 

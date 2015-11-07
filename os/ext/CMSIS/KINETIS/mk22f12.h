@@ -4779,10 +4779,28 @@ typedef struct {
  * @}
  */ /* end of group I2S_Register_Accessor_Macros */
 
+/* SAI module features */
 
-/*!
- * @}
- */ /* end of group I2S_Peripheral_Access_Layer */
+/* @brief Receive/transmit FIFO size in item count (register bit fields TCSR[FRDE], TCSR[FRIE], TCSR[FRF], TCR1[TFW], RCSR[FRDE], RCSR[FRIE], RCSR[FRF], RCR1[RFW], registers TFRn, RFRn). */
+#define FSL_FEATURE_SAI_FIFO_COUNT (8)
+/* @brief Receive/transmit channel number (register bit fields TCR3[TCE], RCR3[RCE], registers TDRn and RDRn). */
+#define FSL_FEATURE_SAI_CHANNEL_COUNT (1)
+/* @brief Maximum words per frame (register bit fields TCR3[WDFL], TCR4[FRSZ], TMR[TWM], RCR3[WDFL], RCR4[FRSZ], RMR[RWM]). */
+#define FSL_FEATURE_SAI_MAX_WORDS_PER_FRAME (16)
+/* @brief Has support of combining multiple data channel FIFOs into single channel FIFO (register bit fields TCR3[CFR], TCR4[FCOMB], TFR0[WCP], TFR1[WCP], RCR3[CFR], RCR4[FCOMB], RFR0[RCP], RFR1[RCP]). */
+#define FSL_FEATURE_SAI_HAS_FIFO_COMBINE_MODE (0)
+/* @brief Has packing of 8-bit and 16-bit data into each 32-bit FIFO word (register bit fields TCR4[FPACK], RCR4[FPACK]). */
+#define FSL_FEATURE_SAI_HAS_FIFO_PACKING (1)
+/* @brief Configures when the SAI will continue transmitting after a FIFO error has been detected (register bit fields TCR4[FCONT], RCR4[FCONT]). */
+#define FSL_FEATURE_SAI_HAS_FIFO_FUNCTION_AFTER_ERROR (1)
+/* @brief Configures if the frame sync is generated internally, a frame sync is only generated when the FIFO warning flag is clear or continuously (register bit fields TCR4[ONDEM], RCR4[ONDEM]). */
+#define FSL_FEATURE_SAI_HAS_ON_DEMAND_MODE (1)
+/* @brief Simplified bit clock source and asynchronous/synchronous mode selection (register bit fields TCR2[CLKMODE], RCR2[CLKMODE]), in comparison with the exclusively implemented TCR2[SYNC,BCS,BCI,MSEL], RCR2[SYNC,BCS,BCI,MSEL]. */
+#define FSL_FEATURE_SAI_HAS_CLOCKING_MODE (0)
+/* @brief Has register for configuration of the MCLK divide ratio (register bit fields MDR[FRACT], MDR[DIVIDE]). */
+#define FSL_FEATURE_SAI_HAS_MCLKDIV_REGISTER (1)
+/* @brief Ihe interrupt source number */
+#define FSL_FEATURE_SAI_INT_SOURCE_NUM (2)
 
 
 /* ----------------------------------------------------------------------------
@@ -5424,6 +5442,7 @@ typedef struct {
 #define MCG_C1_IREFSTEN		((uint8_t)0x1u)
 #define MCG_C1_IRCLKEN		((uint8_t)0x2u)
 #define MCG_C1_IREFS		((uint8_t)0x4u)
+#define MCG_C1_IREFS_MASK                        (0x4u)
 #define MCG_C1_FRDIV_MASK                        0x38u
 #define MCG_C1_FRDIV_SHIFT                       3
 #define MCG_C1_FRDIV_WIDTH                       3

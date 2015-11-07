@@ -8,7 +8,10 @@ PLATFORMSRC = ${CHIBIOS}/os/hal/ports/common/ARMCMx/nvic.c \
               ${CHIBIOS}/os/hal/ports/KINETIS/LLD/ext_lld.c \
               ${CHIBIOS}/os/hal/ports/KINETIS/LLD/adc_lld.c \
               ${CHIBIOS}/os/hal/ports/KINETIS/K22x/gpt_lld.c \
-              ${CHIBIOS}/os/hal/ports/KINETIS/K22x/st_lld.c
+              ${CHIBIOS}/os/hal/ports/KINETIS/K22x/st_lld.c \
+              ${CHIBIOS}/os/hal/ports/KINETIS/K22x/i2s_lld.c \
+              ${CHIBIOS}/os/hal/ports/KINETIS/K22x/fsl_mcg_hal.c \
+              ${CHIBIOS}/os/hal/ports/KINETIS/K22x/mcg_lld.c 
 
 # Required include directories
 PLATFORMINC = ${CHIBIOS}/os/hal/ports/common/ARMCMx \

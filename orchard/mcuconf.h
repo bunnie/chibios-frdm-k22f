@@ -86,7 +86,7 @@
 #define KINETIS_SPI_USE_SPI0                    TRUE
 #define KINETIS_SPI_USE_SPI1                    TRUE
 #define KINETIS_SPI_SPI0_IRQ_PRIORITY           3
-#define KINETIS_SPI_SPI1_IRQ_PRIORITY           1
+#define KINETIS_SPI_SPI1_IRQ_PRIORITY           3
 
 /*
  * I2C system settings.
@@ -100,6 +100,13 @@
  * ADC driver system settings.
  */
 #define KINETIS_ADC_USE_ADC0                  FALSE
+
+/*
+ * I2S driver system settings.
+ */
+#define KINETIS_I2S_USE_I2S1                  TRUE
+#define KINETIS_SPI_TX_PRIORITY               1
+#define KINETIS_SPI_RX_PRIORITY               1
 
 /*
  * Processor specific widths of each port.
