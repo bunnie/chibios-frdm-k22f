@@ -36,7 +36,6 @@
 
 #include "mcg_lld.h"
 
-#define DEFAULT_SYSTEM_CLOCK KINETIS_SYSCLK_FREQUENCY
 uint32_t SystemCoreClock = DEFAULT_SYSTEM_CLOCK;
 
 /*

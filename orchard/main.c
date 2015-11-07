@@ -176,6 +176,8 @@ int main(void)
   chprintf(stream, "\r\n\r\nOrchard shell.  Based on build %s\r\n", gitversion);
   print_mcu_info();
 
+  chprintf(stream, "\r\nSystem core clock: %d Hz\r\n", mk22f12_get_system_clock());
+
   orchardShellRestart();
 
   while (TRUE)

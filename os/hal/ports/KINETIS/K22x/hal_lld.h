@@ -260,6 +260,7 @@ extern "C" {
 #endif
   void hal_lld_init(void);
   void mk22f12_clock_init(void);
+  uint32_t mk22f12_get_system_clock (void);
 #ifdef __cplusplus
 }
 #endif

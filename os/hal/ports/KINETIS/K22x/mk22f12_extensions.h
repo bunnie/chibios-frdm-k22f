@@ -7093,4 +7093,23 @@
 #define OSC_CR_ERCLKEN_SHIFT                     7
 #define OSC_DIV_ERPS_SHIFT                       6
 
+#define RCM_SRS0_WAKEUP_MASK                     0x1u
+#define PMC_REGSC_ACKISO_MASK                    0x8u
+#define SIM_SCGC5_LPTMR_MASK                     0x1u
+#define LPTMR_CSR_TCF_MASK                       0x80u
+#define LPTMR_PSR_PBYP_MASK                      0x4u
+#define LPTMR_CSR_TEN_MASK                       0x1u
+#define SIM_CLKDIV2_USBFRAC_MASK                 0x1u
+
+#define SIM_SCGC6_RTC_MASK                       0x20000000u
+#define RTC_CR_OSCE_MASK                         0x100u
+#define RTC_CR_SC2P_MASK                         0x2000u
+#define RTC_CR_SC4P_MASK                         0x1000u  
+#define RTC_CR_SC8P_MASK                         0x800u
+#define RTC_CR_SC16P_MASK                        0x400u
+#define RTC_CR_CLKO_MASK                         0x200u
+
+#define SIM_SCGC5_PORTA_MASK                     0x200u 
+#define PORT_PCR_ISF_MASK                        0x1000000u 
+
 #endif
