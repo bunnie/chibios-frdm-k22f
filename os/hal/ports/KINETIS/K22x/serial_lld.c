@@ -179,13 +179,11 @@ static void configure_uart(UART_TypeDef *uart, const SerialConfig *config)
 /*===========================================================================*/
 
 /* TODO:
- *   UART0_Error is VectorC0
- *   UART1_Error is VectorC8
- *   UART2_Error is VectorD0
+ *   KINETIS_UARTn_ERR_VECTOR
  */
 
 #if KINETIS_SERIAL_USE_UART0 || defined(__DOXYGEN__)
-OSAL_IRQ_HANDLER(KINETIS_UART0_ERR_VECTOR) {
+OSAL_IRQ_HANDLER(KINETIS_UART0_STAT_VECTOR) {
 
   OSAL_IRQ_PROLOGUE();
   serve_interrupt(&SD1);
@@ -194,7 +192,7 @@ OSAL_IRQ_HANDLER(KINETIS_UART0_ERR_VECTOR) {
 #endif
 
 #if KINETIS_SERIAL_USE_UART1 || defined(__DOXYGEN__)
-OSAL_IRQ_HANDLER(KINETIS_UART1_ERR_VECTOR) {
+OSAL_IRQ_HANDLER(KINETIS_UART1_STAT_VECTOR) {
 
   OSAL_IRQ_PROLOGUE();
   serve_interrupt(&SD2);
@@ -203,7 +201,7 @@ OSAL_IRQ_HANDLER(KINETIS_UART1_ERR_VECTOR) {
 #endif
 
 #if KINETIS_SERIAL_USE_UART2 || defined(__DOXYGEN__)
-OSAL_IRQ_HANDLER(KINETIS_UART2_ERR_VECTOR) {
+OSAL_IRQ_HANDLER(KINETIS_UART2_STAT_VECTOR) {
 
   OSAL_IRQ_PROLOGUE();
   serve_interrupt(&SD3);
