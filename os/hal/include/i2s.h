@@ -99,6 +99,36 @@ typedef enum {
 }
 
 /**
+ * @name    Macro Functions
+ * @{
+ */
+/**
+ * @brief   Starts a I2S data rx.
+ *
+ * @param[in] i2sp      pointer to the @p I2SDriver object
+ *
+ * @iclass
+ */
+#define i2sStartRxI(i2sp) {                                           \
+  i2s_lld_start_rx(i2sp);                                             \
+  (i2sp)->state = I2S_ACTIVE;                                               \
+}
+
+/**
+ * @brief   Stops the ongoing data rx.
+ * @details The ongoing data exchange, if any, is stopped, if the driver
+ *          was not active the function does nothing.
+ *
+ * @param[in] i2sp      pointer to the @p I2SDriver object
+ *
+ * @iclass
+ */
+#define i2sStopRxI(i2sp) {                                            \
+  i2s_lld_stop_rx(i2sp);                                              \
+  (i2sp)->state = I2S_READY;                                                \
+}
+
+/**
  * @brief   Common ISR code, half buffer event.
  * @details This code handles the portable part of the ISR code:
  *          - Callback invocation.
@@ -156,6 +186,8 @@ extern "C" {
   void i2sStop(I2SDriver *i2sp);
   void i2sStartExchange(I2SDriver *i2sp);
   void i2sStopExchange(I2SDriver *i2sp);
+  void i2sStartRx(I2SDriver *i2sp);
+  void i2sStopRx(I2SDriver *i2sp);
 #ifdef __cplusplus
 }
 #endif

@@ -405,10 +405,78 @@ static void SAI_HAL_ReceiveDataBlocking(I2S_TypeDef * base, uint32_t rx_channel,
 static void SAI_HAL_SendDataBlocking(I2S_TypeDef * base, uint32_t tx_channel, 
     uint8_t * txBuff, uint32_t size);
 
+static void serve_rx_interrupt(I2SDriver *i2sp) {
+  I2S_TypeDef * reg_base = i2sp->I2S;
+  uint8_t i = 0;
+  uint8_t data_size = 0;
+  uint32_t data = 0;
+  sai_data_format_t format = i2sp->config->sai_rx_state.format;
+  uint32_t len = i2sp->config->sai_rx_state.len;
+  uint32_t count = i2sp->config->sai_rx_state.count;
+
+  data_size = format.bits/8;
+  if((data_size == 3) || (format.bits & 0x7)) {
+    data_size = 4;
+  }
+
+  /* Judge if FIFO error */
+  if(SAI_HAL_RxGetStateFlag(reg_base, kSaiStateFlagFIFOError)) {
+    // well, if an error I guess we do nothing but clear the flag for now
+    SAI_HAL_RxClearStateFlag(reg_base, kSaiStateFlagFIFOError);    
+  }
+  uint8_t j = 0;
+  /* Interrupt used to transfer data. */
+  if((SAI_HAL_RxGetStateFlag(reg_base, kSaiStateFlagFIFORequest)) &&
+     (!i2sp->config->sai_rx_state.use_dma)) {
+    uint8_t space = i2sp->config->sai_rx_state.watermark;
+    /*Judge if the data need to transmit is less than space */
+    if(space > (len - count)/data_size) {
+      space = (len -count)/data_size;
+    }
+    /* Read data from FIFO to the buffer */
+    for (i = 0; i < space; i ++) {
+      data = SAI_HAL_ReceiveData(reg_base, 0);  // channel ID is always 0, as there is only one channel
+      for(j = 0; j < data_size; j ++) {  // byte by byte copy, not very efficient..but allows format flexibility
+	*(i2sp->config->sai_rx_state.address) = (data >> (8U * j)) & 0xFF;
+	i2sp->config->sai_rx_state.address++;
+      }
+      i2sp->config->sai_rx_state.count += data_size;
+    }
+    
+    /* Determine how full we are, and what type of callback has to happen */
+    count = i2sp->config->sai_rx_state.count;
+    if (count >= len ) {
+      if( i2sp->config->end_cb ) {
+	(*i2sp->config->end_cb)(i2sp, 0, len / data_size); // just deal with full buffers for now
+	// why? FIFO has some space, should give ~10k cycles to do the data copy and return.
+	// no need to double-buffer at this performance level
+      }
+      // reset buffer to init params
+      i2sp->config->sai_rx_state.address = i2sp->config->rx_buffer;  // reset the buffer address to initial state
+      i2sp->config->sai_rx_state.count = 0;
+    }
+  }
+}
 
 /*===========================================================================*/
 /* Driver interrupt handlers.                                                */
 /*===========================================================================*/
+
+#if KINETIS_I2S_USE_I2S1
+OSAL_IRQ_HANDLER(KINETIS_I2S0_RX_VECTOR) {
+  OSAL_IRQ_PROLOGUE();
+  serve_rx_interrupt(&I2SD1);
+  OSAL_IRQ_EPILOGUE();
+}
+#endif
+
+#if KINETIS_I2S_USE_I2S1
+OSAL_IRQ_HANDLER(KINETIS_I2S0_TX_VECTOR) {
+  OSAL_IRQ_PROLOGUE();
+  // placeholder
+  OSAL_IRQ_EPILOGUE();
+}
+#endif
 
 /*===========================================================================*/
 /* Driver exported functions.                                                */
@@ -1298,66 +1366,60 @@ void i2s_lld_start(I2SDriver *i2sp) {
     // enable clocks for I2S0
     SIM->SCGC6 |= SIM_SCGC6_I2S;
 
-    // setup PHY attributes
-    SAI_HAL_TxInit(i2sp->I2S);  
-    /* Mclk source select */
-    if (i2sp->config->sai_tx_userconfig.slave_master == kSaiMaster)
-    {
+    if( i2sp->config->tx_buffer != NULL ) {
+      // setup PHY attributes
+      SAI_HAL_TxInit(i2sp->I2S);  
+      /* Mclk source select */
+      if (i2sp->config->sai_tx_userconfig.slave_master == kSaiMaster) {
         SAI_HAL_SetMclkSrc(i2sp->I2S, i2sp->config->sai_tx_userconfig.mclk_source);
         SAI_HAL_TxSetBclkSrc(i2sp->I2S, i2sp->config->sai_tx_userconfig.bclk_source);
+      }
+      SAI_HAL_TxSetSyncMode(i2sp->I2S, i2sp->config->sai_tx_userconfig.sync_mode);
+      SAI_HAL_TxSetMasterSlave(i2sp->I2S, i2sp->config->sai_tx_userconfig.slave_master);
+      SAI_HAL_TxSetProtocol(i2sp->I2S, i2sp->config->sai_tx_userconfig.protocol);
+      SAI_HAL_TxSetDataChn(i2sp->I2S, i2sp->config->sai_tx_userconfig.channel);
+      SAI_HAL_TxSetWatermark(i2sp->I2S, i2sp->config->sai_tx_userconfig.watermark);
+
+      /* Fill the state structure */
+      i2sp->config->sai_tx_state.sync_mode = i2sp->config->sai_tx_userconfig.sync_mode;
+      i2sp->config->sai_tx_state.fifo_channel = i2sp->config->sai_tx_userconfig.channel;
+      i2sp->config->sai_tx_state.dma_source = i2sp->config->sai_tx_userconfig.dma_source;
+      i2sp->config->sai_tx_state.watermark = i2sp->config->sai_tx_userconfig.watermark;
+      i2sp->config->sai_tx_state.master_slave = i2sp->config->sai_tx_userconfig.slave_master;
+
+      //    OSA_SemaCreate(&state->sem, 0);
+      nvicEnableVector(I2S0_Tx_IRQn, KINETIS_SPI_TX_PRIORITY);
+
+      // this is a bit circular because we're using our default format spec to set
+      // the format now -- but more generically, the data format can change dynamically
+      SAI_DRV_TxConfigDataFormat(i2sp, &i2sp->config->sai_tx_state.format);
     }
-    SAI_HAL_TxSetSyncMode(i2sp->I2S, i2sp->config->sai_tx_userconfig.sync_mode);
-    SAI_HAL_TxSetMasterSlave(i2sp->I2S, i2sp->config->sai_tx_userconfig.slave_master);
-    SAI_HAL_TxSetProtocol(i2sp->I2S, i2sp->config->sai_tx_userconfig.protocol);
-    SAI_HAL_TxSetDataChn(i2sp->I2S, i2sp->config->sai_tx_userconfig.channel);
-#if (FSL_FEATURE_SAI_FIFO_COUNT > 1)
-    SAI_HAL_TxSetWatermark(i2sp->I2S, i2sp->config->sai_tx_userconfig.watermark);
-#endif
 
-    /* Fill the state structure */
-    i2sp->config->sai_tx_state.sync_mode = i2sp->config->sai_tx_userconfig.sync_mode;
-    i2sp->config->sai_tx_state.fifo_channel = i2sp->config->sai_tx_userconfig.channel;
-    i2sp->config->sai_tx_state.dma_source = i2sp->config->sai_tx_userconfig.dma_source;
-#if (FSL_FEATURE_SAI_FIFO_COUNT > 1)
-    i2sp->config->sai_tx_state.watermark = i2sp->config->sai_tx_userconfig.watermark;
-#endif
-    i2sp->config->sai_tx_state.master_slave = i2sp->config->sai_tx_userconfig.slave_master;
+    if( i2sp->config->rx_buffer != NULL ) {
 
-    //    OSA_SemaCreate(&state->sem, 0);
-    nvicEnableVector(I2S0_Tx_IRQn, KINETIS_SPI_TX_PRIORITY);
-
-    // this is a bit circular because we're using our default format spec to set
-    // the format now -- but more generically, the data format can change dynamically
-    SAI_DRV_TxConfigDataFormat(i2sp, &i2sp->config->sai_tx_state.format);
-
-
-    SAI_HAL_RxInit(i2sp->I2S);
-    /* Mclk source select */
-    if (i2sp->config->sai_rx_userconfig.slave_master == kSaiMaster)
-    {
+      SAI_HAL_RxInit(i2sp->I2S);
+      /* Mclk source select */
+      if (i2sp->config->sai_rx_userconfig.slave_master == kSaiMaster) {
         SAI_HAL_SetMclkSrc(i2sp->I2S, i2sp->config->sai_rx_userconfig.mclk_source);
         SAI_HAL_RxSetBclkSrc(i2sp->I2S, i2sp->config->sai_rx_userconfig.bclk_source);
+      }
+      SAI_HAL_RxSetSyncMode(i2sp->I2S, i2sp->config->sai_rx_userconfig.sync_mode);
+      SAI_HAL_RxSetMasterSlave(i2sp->I2S, i2sp->config->sai_rx_userconfig.slave_master);
+      SAI_HAL_RxSetProtocol(i2sp->I2S, i2sp->config->sai_rx_userconfig.protocol);
+      SAI_HAL_RxSetDataChn(i2sp->I2S, i2sp->config->sai_rx_userconfig.channel);
+      SAI_HAL_RxSetWatermark(i2sp->I2S, i2sp->config->sai_rx_userconfig.watermark);
+
+      /* Fill the state structure */
+      i2sp->config->sai_rx_state.sync_mode = i2sp->config->sai_rx_userconfig.sync_mode;
+      i2sp->config->sai_rx_state.fifo_channel = i2sp->config->sai_rx_userconfig.channel;
+      i2sp->config->sai_rx_state.dma_source = i2sp->config->sai_rx_userconfig.dma_source;
+      i2sp->config->sai_rx_state.watermark = i2sp->config->sai_rx_userconfig.watermark;
+      i2sp->config->sai_rx_state.master_slave = i2sp->config->sai_rx_userconfig.slave_master;
+      //    OSA_SemaCreate(&state->sem, 0);
+      nvicEnableVector(I2S0_Rx_IRQn, KINETIS_SPI_RX_PRIORITY);
+
+      SAI_DRV_RxConfigDataFormat(i2sp, &i2sp->config->sai_rx_state.format);
     }
-    SAI_HAL_RxSetSyncMode(i2sp->I2S, i2sp->config->sai_rx_userconfig.sync_mode);
-    SAI_HAL_RxSetMasterSlave(i2sp->I2S, i2sp->config->sai_rx_userconfig.slave_master);
-    SAI_HAL_RxSetProtocol(i2sp->I2S, i2sp->config->sai_rx_userconfig.protocol);
-    SAI_HAL_RxSetDataChn(i2sp->I2S, i2sp->config->sai_rx_userconfig.channel);
-#if (FSL_FEATURE_SAI_FIFO_COUNT > 1)
-    SAI_HAL_RxSetWatermark(i2sp->I2S, i2sp->config->sai_rx_userconfig.watermark);
-#endif
-    /* Fill the state structure */
-    i2sp->config->sai_rx_state.sync_mode = i2sp->config->sai_rx_userconfig.sync_mode;
-    i2sp->config->sai_rx_state.fifo_channel = i2sp->config->sai_rx_userconfig.channel;
-    i2sp->config->sai_rx_state.dma_source = i2sp->config->sai_rx_userconfig.dma_source;
-#if (FSL_FEATURE_SAI_FIFO_COUNT > 1)
-    i2sp->config->sai_rx_state.watermark = i2sp->config->sai_rx_userconfig.watermark;
-#endif
-    i2sp->config->sai_rx_state.master_slave = i2sp->config->sai_rx_userconfig.slave_master;
-    //    OSA_SemaCreate(&state->sem, 0);
-    nvicEnableVector(I2S0_Rx_IRQn, KINETIS_SPI_RX_PRIORITY);
-
-    SAI_DRV_RxConfigDataFormat(i2sp, &i2sp->config->sai_rx_state.format);
-
 #endif
   }
 }
@@ -1431,6 +1493,45 @@ void i2s_lld_stop(I2SDriver *i2sp) {
 #endif
   }
 }
+
+/**
+ * @brief   Starts a I2S data receive only.
+ *
+ * @param[in] i2sp      pointer to the @p I2SDriver object
+ *
+ * @notapi
+ */
+void i2s_lld_start_rx(I2SDriver *i2sp) {
+
+  (void)i2sp;
+  I2S_TypeDef * reg_base = i2sp->I2S;
+
+  // hardware int handler already setup in driver
+  // enable the interrupts to drain the FIFO
+  SAI_HAL_RxSetIntCmd(reg_base, kSaiIntrequestFIFORequest, true); // fires when watermark hit
+  SAI_HAL_RxSetIntCmd(reg_base, kSaiIntrequestFIFOError, true); // fires on errors, not installed now
+
+  // then start the system running and I think we're done!
+  if(i2sp->config->sai_rx_state.sync_mode == kSaiModeSync) {
+        SAI_HAL_RxEnable(reg_base);
+        SAI_HAL_TxEnable(reg_base);
+  } else {
+        SAI_HAL_RxEnable(reg_base);
+  };
+}
+
+/**
+ * @brief   Stops a I2S data receive only.
+ *
+ * @param[in] i2sp      pointer to the @p I2SDriver object
+ *
+ * @notapi
+ */
+void i2s_lld_stop_rx(I2SDriver *i2sp) {
+
+  (void)i2sp;
+}
+
 
 /**
  * @brief   Starts a I2S data exchange.

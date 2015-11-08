@@ -150,6 +150,46 @@ void i2sStopExchange(I2SDriver *i2sp) {
   osalSysUnlock();
 }
 
+/**
+ * @brief   Starts a I2S data rx.
+ *
+ * @param[in] i2sp      pointer to the @p I2SDriver object
+ *
+ * @api
+ */
+void i2sStartRx(I2SDriver *i2sp) {
+
+  osalDbgCheck(i2sp != NULL);
+
+  osalSysLock();
+  osalDbgAssert(i2sp->state == I2S_READY, "not ready");
+  i2sStartRxI(i2sp);
+  osalSysUnlock();
+}
+
+/**
+ * @brief   Stops the ongoing data rx.
+ * @details The ongoing data exchange, if any, is stopped, if the driver
+ *          was not active the function does nothing.
+ *
+ * @param[in] i2sp      pointer to the @p I2SDriver object
+ *
+ * @api
+ */
+void i2sStopRx(I2SDriver *i2sp) {
+
+  osalDbgCheck((i2sp != NULL));
+
+  osalSysLock();
+  osalDbgAssert((i2sp->state == I2S_READY) ||
+                (i2sp->state == I2S_ACTIVE) ||
+                (i2sp->state == I2S_COMPLETE),
+                "invalid state");
+  i2sStopRxI(i2sp);
+  osalSysUnlock();
+}
+
+
 #endif /* HAL_USE_I2S == TRUE */
 
 /** @} */

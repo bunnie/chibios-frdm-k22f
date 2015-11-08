@@ -212,28 +212,28 @@ typedef struct SaiAudioDataFormat
 */
 typedef struct sai_state
 {
-    sai_data_format_t format;
-    uint8_t * address;
-    uint32_t len;
-    uint32_t count;
-    sai_callback_t  callback;
-    void * callback_param;
-    sai_sync_mode_t sync_mode;
-    uint32_t fifo_channel;
+  sai_data_format_t format;
+  uint8_t * address; // current address pointer, changes from original buffer offset
+  uint32_t len;  // length of buffer, in bytes
+  uint32_t count;  // current count, in bytes
+  sai_callback_t  callback;
+  void * callback_param;
+  sai_sync_mode_t sync_mode;
+  uint32_t fifo_channel;
 #if (FSL_FEATURE_SAI_FIFO_COUNT > 1)
-    uint32_t watermark;
+  uint32_t watermark;
 #endif
-    sai_master_slave_t master_slave;
-    sai_protocol_t protocol;
+  sai_master_slave_t master_slave;
+  sai_protocol_t protocol;
 #if defined FSL_FEATURE_EDMA_MODULE_CHANNEL
   //    edma_chn_state_t edma_chn;
   //    edma_software_tcd_t tcd[2];
 #else
-    uint8_t chn;
+  uint8_t chn;
 #endif
   //    semaphore_t sem;
-    bool use_dma;
-    uint32_t dma_source;
+  bool use_dma;
+  uint32_t dma_source;
 } sai_state_t;
 
 /*! @brief The description structure for the SAI transmit/receive module.
@@ -829,6 +829,8 @@ extern "C" {
   void i2s_lld_stop(I2SDriver *i2sp);
   void i2s_lld_start_exchange(I2SDriver *i2sp);
   void i2s_lld_stop_exchange(I2SDriver *i2sp);
+  void i2s_lld_start_rx(I2SDriver *i2sp);
+  void i2s_lld_stop_rx(I2SDriver *i2sp);
 #ifdef __cplusplus
 }
 #endif

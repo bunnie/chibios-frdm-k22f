@@ -26,17 +26,24 @@
 #include "orchard-shell.h"
 #include "orchard-events.h"
 
+#include <string.h>
+
 struct evt_table orchard_events;
 
 static const I2CConfig i2c_config = {
   100000
 };
 
+void i2s_handler(I2SDriver *i2sp, size_t offset, size_t n);
+#define NUM_RX_SAMPLES 1024
+uint16_t rx_samples[NUM_RX_SAMPLES];
+uint16_t rx_savebuf[NUM_RX_SAMPLES];
+
 static I2SConfig i2s_config = {
   NULL,
-  NULL,
-  0,
-  NULL,
+  rx_samples,
+  NUM_RX_SAMPLES * sizeof(uint16_t),
+  i2s_handler,
   { // sai_tx_state
     {48000u, KINETIS_SYSCLK_FREQUENCY /*mclk freq*/, 18, kSaiStereo},
     NULL,
@@ -55,12 +62,12 @@ static I2SConfig i2s_config = {
   },
   { // sai_rx_state
     {48000u, KINETIS_SYSCLK_FREQUENCY /*mclk freq*/, 18, kSaiStereo},
-    NULL,
+    (uint8_t *) rx_samples,  // regardless fo sample size, driver thinks of this as char stream...for now.
+    NUM_RX_SAMPLES * sizeof(uint16_t),
     0,
-    0,
     NULL,
     NULL,
-    kSaiModeSync,
+    kSaiModeAsync,
     0,
     4,
     kSaiMaster,
@@ -82,7 +89,7 @@ static I2SConfig i2s_config = {
   { // rx_userconfig
     kSaiMclkSourceSysclk,
     0,
-    kSaiModeSync,
+    kSaiModeAsync,
     kSaiBusI2SType,
     kSaiMaster,
     kSaiBclkSourceMclkDiv,
@@ -91,6 +98,18 @@ static I2SConfig i2s_config = {
   }
 };
 
+void i2s_handler(I2SDriver *i2sp, size_t offset, size_t n) {
+  (void) i2sp;
+  (void) offset;
+  (void) n;
+  
+  uint32_t i;
+
+  // for now just copy it into the save buffer over and over again.
+  // in the future, this would then kick off a SPI MMC data write event to save out the blocks
+  memcpy( rx_savebuf, rx_samples, NUM_RX_SAMPLES * sizeof(uint16_t) );
+
+}
 
 static void shell_termination_handler(eventid_t id) {
   static int i = 1;

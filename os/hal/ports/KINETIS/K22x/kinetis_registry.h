@@ -30,7 +30,7 @@
 /*===========================================================================*/
 
 /**
- * @name    K22x capabilities
+ * @name    K22x capabilities - VectorN, where N is the physical address of the vector in hex
  * @{
  */
 /* EXT attributes.*/
