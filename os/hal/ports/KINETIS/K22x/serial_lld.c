@@ -184,10 +184,8 @@ static void configure_uart(UART_TypeDef *uart, const SerialConfig *config)
  *   UART2_Error is VectorD0
  */
 
-// why is this not using the abstractions in the K22 CMSIS file??
-
 #if KINETIS_SERIAL_USE_UART0 || defined(__DOXYGEN__)
-OSAL_IRQ_HANDLER(VectorBC) {
+OSAL_IRQ_HANDLER(KINETIS_UART0_ERR_VECTOR) {
 
   OSAL_IRQ_PROLOGUE();
   serve_interrupt(&SD1);
@@ -196,7 +194,7 @@ OSAL_IRQ_HANDLER(VectorBC) {
 #endif
 
 #if KINETIS_SERIAL_USE_UART1 || defined(__DOXYGEN__)
-OSAL_IRQ_HANDLER(VectorC4) {
+OSAL_IRQ_HANDLER(KINETIS_UART1_ERR_VECTOR) {
 
   OSAL_IRQ_PROLOGUE();
   serve_interrupt(&SD2);
@@ -205,7 +203,7 @@ OSAL_IRQ_HANDLER(VectorC4) {
 #endif
 
 #if KINETIS_SERIAL_USE_UART2 || defined(__DOXYGEN__)
-OSAL_IRQ_HANDLER(VectorCC) {
+OSAL_IRQ_HANDLER(KINETIS_UART2_ERR_VECTOR) {
 
   OSAL_IRQ_PROLOGUE();
   serve_interrupt(&SD3);
