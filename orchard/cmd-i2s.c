@@ -28,8 +28,9 @@ void cmd_i2s(BaseSequentialStream *chp, int argc, char *argv[])
     return;
   }
   
-  chprintf(chp, "Starting I2S for testing...wish me luck!\r\n" );
+  //  chprintf(chp, "Starting I2S for testing...wish me luck!\r\n" );
   i2sStartRx(&I2SD1);
+  //chprintf(chp, "started.\n\r");
 
 }
 

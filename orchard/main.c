@@ -35,7 +35,7 @@ static const I2CConfig i2c_config = {
 };
 
 void i2s_handler(I2SDriver *i2sp, size_t offset, size_t n);
-#define NUM_RX_SAMPLES 1024
+#define NUM_RX_SAMPLES 512
 uint16_t rx_samples[NUM_RX_SAMPLES];
 uint16_t rx_savebuf[NUM_RX_SAMPLES];
 
@@ -45,7 +45,7 @@ static I2SConfig i2s_config = {
   NUM_RX_SAMPLES * sizeof(uint16_t),
   i2s_handler,
   { // sai_tx_state
-    {48000u, KINETIS_SYSCLK_FREQUENCY /*mclk freq*/, 18, kSaiStereo},
+    {48000u, 6144000 /*mclk freq*/, 32, kSaiStereo},  // mclk must be at least 2x bitclock
     NULL,
     0,
     0,
@@ -61,7 +61,7 @@ static I2SConfig i2s_config = {
     0,
   },
   { // sai_rx_state
-    {48000u, KINETIS_SYSCLK_FREQUENCY /*mclk freq*/, 18, kSaiStereo},
+    {48000u, 6144000 /*mclk freq*/, 32, kSaiStereo},
     (uint8_t *) rx_samples,  // regardless fo sample size, driver thinks of this as char stream...for now.
     NUM_RX_SAMPLES * sizeof(uint16_t),
     0,
@@ -103,8 +103,6 @@ void i2s_handler(I2SDriver *i2sp, size_t offset, size_t n) {
   (void) offset;
   (void) n;
   
-  uint32_t i;
-
   // for now just copy it into the save buffer over and over again.
   // in the future, this would then kick off a SPI MMC data write event to save out the blocks
   memcpy( rx_savebuf, rx_samples, NUM_RX_SAMPLES * sizeof(uint16_t) );

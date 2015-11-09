@@ -28,6 +28,7 @@
 #include "mcg_lld.h"
 
 extern uint32_t SystemCoreClock;
+extern uint32_t g_xtal0ClkFreq;
 
 /*===========================================================================*/
 /* Driver local definitions.                                                 */
@@ -88,6 +89,27 @@ void hal_lld_init(void) {
 
 }
 
+#if 0
+/* Function to initialize OSC0 base on board configuration. */
+static void BOARD_InitOsc0(void)  // mostly here for reference
+{
+  // OSC0 configuration.
+    osc_user_config_t osc0Config =
+      {
+        .freq                = OSC0_XTAL_FREQ,
+        .hgo                 = MCG_HGO0,
+        .range               = MCG_RANGE0,
+        .erefs               = MCG_EREFS0,
+        .enableCapacitor2p   = OSC0_SC2P_ENABLE_CONFIG,
+        .enableCapacitor4p   = OSC0_SC4P_ENABLE_CONFIG,
+        .enableCapacitor8p   = OSC0_SC8P_ENABLE_CONFIG,
+        .enableCapacitor16p  = OSC0_SC16P_ENABLE_CONFIG,
+      };
+
+    CLOCK_SYS_OscInit(0U, &osc0Config);
+}
+#endif
+
 /**
  * @brief   MK22f12 clock initialization.
  * @note    All the involved constants come from the file @p board.h.
@@ -133,7 +155,7 @@ void mk22f12_clock_init(void) {
   /* EXTAL0 and XTAL0 */
   PORTA->PCR[18] = 0;
   PORTA->PCR[19] = 0;
-
+  
   /*
    * Start in FEI mode
    */
@@ -211,6 +233,7 @@ void mk22f12_clock_init(void) {
 #else /* ifndef CLOCK_SETUP */   ///////////////////////////////////
 
   /* EXTAL0 and XTAL0 */
+
   PORTA->PCR[18] = 0;
   PORTA->PCR[19] = 0;
 

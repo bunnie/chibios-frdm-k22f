@@ -121,7 +121,7 @@ typedef enum _sai_interrupt_request
     kSaiIntrequestFIFOWarning = 0x200u,/*!< FIFO warning flag, means the FIFO is empty */
     kSaiIntrequestFIFOError = 0x400u,/*!< FIFO error flag */
     kSaiIntrequestFIFORequest = 0x100u,/*!< FIFO request, means reached watermark */
-    kSaiIntRequestAll = 0x1F00 /* All interrupt source */
+    kSaiIntrequestAll = 0x1F00 /* All interrupt source */
 } sai_interrupt_request_t;
 
 /*! @brief The DMA request sources */

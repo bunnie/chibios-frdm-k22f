@@ -24,6 +24,8 @@
 #include "hal.h"
 #include <string.h>
 
+uint32_t rx_int_count = 0;
+
 #if HAL_USE_I2S || defined(__DOXYGEN__)
 
 /*===========================================================================*/
@@ -465,7 +467,10 @@ static void serve_rx_interrupt(I2SDriver *i2sp) {
 #if KINETIS_I2S_USE_I2S1
 OSAL_IRQ_HANDLER(KINETIS_I2S0_RX_VECTOR) {
   OSAL_IRQ_PROLOGUE();
+  osalSysLockFromISR(); 
+  rx_int_count++;
   serve_rx_interrupt(&I2SD1);
+  osalSysUnlockFromISR();  
   OSAL_IRQ_EPILOGUE();
 }
 #endif
@@ -1508,13 +1513,14 @@ void i2s_lld_start_rx(I2SDriver *i2sp) {
 
   // hardware int handler already setup in driver
   // enable the interrupts to drain the FIFO
+  SAI_HAL_RxSetIntCmd(reg_base, kSaiIntrequestAll, false);  // clear all interrupts except the one we want
   SAI_HAL_RxSetIntCmd(reg_base, kSaiIntrequestFIFORequest, true); // fires when watermark hit
-  SAI_HAL_RxSetIntCmd(reg_base, kSaiIntrequestFIFOError, true); // fires on errors, not installed now
+  SAI_HAL_RxSetIntCmd(reg_base, kSaiIntrequestFIFOError, false); // ignore errors for now
 
   // then start the system running and I think we're done!
   if(i2sp->config->sai_rx_state.sync_mode == kSaiModeSync) {
         SAI_HAL_RxEnable(reg_base);
-        SAI_HAL_TxEnable(reg_base);
+	//        SAI_HAL_TxEnable(reg_base);  // just in case this is causing us trouble?
   } else {
         SAI_HAL_RxEnable(reg_base);
   };

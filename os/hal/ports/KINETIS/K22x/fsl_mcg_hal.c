@@ -43,14 +43,14 @@
  ******************************************************************************/
 
 /* This frequency values should be set by different boards. */
-uint32_t g_xtal0ClkFreq;           /* EXTAL0 clock */
+uint32_t g_xtal0ClkFreq = KINETIS_XTAL_FREQUENCY;           /* EXTAL0 clock */
 #if FSL_FEATURE_MCG_HAS_OSC1
 uint32_t g_xtal1ClkFreq;           /* EXTAL1 clock */
 #endif
 #if FSL_FEATURE_MCG_HAS_EXTERNAL_PLL
 uint32_t g_extPllClkFreq;          /* External PLL clock */
 #endif
-uint32_t g_xtalRtcClkFreq;         /* EXTAL RTC clock */
+uint32_t g_xtalRtcClkFreq = CPU_XTAL32k_CLK_HZ;         /* EXTAL RTC clock */
 
 uint32_t g_fastInternalRefClkFreq = 4000000U;
 uint32_t g_slowInternalRefClkFreq = 32768U;
