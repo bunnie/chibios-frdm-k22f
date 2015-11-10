@@ -214,8 +214,8 @@ typedef struct sai_state
 {
   sai_data_format_t format;
   uint8_t * address; // current address pointer, changes from original buffer offset
-  uint32_t len;  // length of buffer, in bytes
-  uint32_t count;  // current count, in bytes
+  uint32_t len;  // length of buffer, in samples
+  uint32_t count;  // current count, in samples
   sai_callback_t  callback;
   void * callback_param;
   sai_sync_mode_t sync_mode;

@@ -410,46 +410,30 @@ static void SAI_HAL_SendDataBlocking(I2S_TypeDef * base, uint32_t tx_channel,
 static void serve_rx_interrupt(I2SDriver *i2sp) {
   I2S_TypeDef * reg_base = i2sp->I2S;
   uint8_t i = 0;
-  uint8_t data_size = 0;
-  uint32_t data = 0;
-  sai_data_format_t format = i2sp->config->sai_rx_state.format;
   uint32_t len = i2sp->config->sai_rx_state.len;
-  uint32_t count = i2sp->config->sai_rx_state.count;
-
-  data_size = format.bits/8;
-  if((data_size == 3) || (format.bits & 0x7)) {
-    data_size = 4;
-  }
 
   /* Judge if FIFO error */
   if(SAI_HAL_RxGetStateFlag(reg_base, kSaiStateFlagFIFOError)) {
     // well, if an error I guess we do nothing but clear the flag for now
     SAI_HAL_RxClearStateFlag(reg_base, kSaiStateFlagFIFOError);    
   }
-  uint8_t j = 0;
   /* Interrupt used to transfer data. */
   if((SAI_HAL_RxGetStateFlag(reg_base, kSaiStateFlagFIFORequest)) &&
      (!i2sp->config->sai_rx_state.use_dma)) {
     uint8_t space = i2sp->config->sai_rx_state.watermark;
     /*Judge if the data need to transmit is less than space */
-    if(space > (len - count)/data_size) {
-      space = (len -count)/data_size;
+    if(space > (len - i2sp->config->sai_rx_state.count)) {
+      space = len - i2sp->config->sai_rx_state.count;
     }
     /* Read data from FIFO to the buffer */
-    for (i = 0; i < space; i ++) {
-      data = SAI_HAL_ReceiveData(reg_base, 0);  // channel ID is always 0, as there is only one channel
-      for(j = 0; j < data_size; j ++) {  // byte by byte copy, not very efficient..but allows format flexibility
-	*(i2sp->config->sai_rx_state.address) = (data >> (8U * j)) & 0xFF;
-	i2sp->config->sai_rx_state.address++;
-      }
-      i2sp->config->sai_rx_state.count += data_size;
+    for( i = 0; i < space; i++ ) {
+      ((uint32_t *)i2sp->config->rx_buffer)[i2sp->config->sai_rx_state.count++] = reg_base->RDR[0];
     }
     
     /* Determine how full we are, and what type of callback has to happen */
-    count = i2sp->config->sai_rx_state.count;
-    if (count >= len ) {
+    if (i2sp->config->sai_rx_state.count >= len ) {
       if( i2sp->config->end_cb ) {
-	(*i2sp->config->end_cb)(i2sp, 0, len / data_size); // just deal with full buffers for now
+	(*i2sp->config->end_cb)(i2sp, 0, len); // just deal with full buffers for now
 	// why? FIFO has some space, should give ~10k cycles to do the data copy and return.
 	// no need to double-buffer at this performance level
       }
@@ -1424,6 +1408,8 @@ void i2s_lld_start(I2SDriver *i2sp) {
       nvicEnableVector(I2S0_Rx_IRQn, KINETIS_I2S_RX_PRIORITY);
 
       SAI_DRV_RxConfigDataFormat(i2sp, &i2sp->config->sai_rx_state.format);
+
+      i2sp->I2S->RMR = I2S_RMR_RWM(0x2);  // mask out unused stereo channel
     }
 #endif
   }
@@ -1515,7 +1501,7 @@ void i2s_lld_start_rx(I2SDriver *i2sp) {
   // enable the interrupts to drain the FIFO
   SAI_HAL_RxSetIntCmd(reg_base, kSaiIntrequestAll, false);  // clear all interrupts except the one we want
   SAI_HAL_RxSetIntCmd(reg_base, kSaiIntrequestFIFORequest, true); // fires when watermark hit
-  SAI_HAL_RxSetIntCmd(reg_base, kSaiIntrequestFIFOError, false); // ignore errors for now
+  SAI_HAL_RxSetIntCmd(reg_base, kSaiIntrequestFIFOError, true); // ignore errors for now
 
   // then start the system running and I think we're done!
   if(i2sp->config->sai_rx_state.sync_mode == kSaiModeSync) {
