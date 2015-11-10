@@ -134,27 +134,27 @@
  * EXTI driver system settings.
  */
 #define KINETIS_EXTI_NUM_CHANNELS               8
-#define KINETIS_EXT_PORTA_IRQ_PRIORITY          3
-#define KINETIS_EXT_PORTB_IRQ_PRIORITY          3
-#define KINETIS_EXT_PORTC_IRQ_PRIORITY          3
-#define KINETIS_EXT_PORTD_IRQ_PRIORITY          3
-#define KINETIS_EXT_PORTE_IRQ_PRIORITY          3
+#define KINETIS_EXT_PORTA_IRQ_PRIORITY          5
+#define KINETIS_EXT_PORTB_IRQ_PRIORITY          5
+#define KINETIS_EXT_PORTC_IRQ_PRIORITY          5
+#define KINETIS_EXT_PORTD_IRQ_PRIORITY          5
+#define KINETIS_EXT_PORTE_IRQ_PRIORITY          5
 
 /*
  * SPI system settings.
  */
 #define KINETIS_SPI_USE_SPI0                    TRUE
 #define KINETIS_SPI_USE_SPI1                    TRUE
-#define KINETIS_SPI_SPI0_IRQ_PRIORITY           3
-#define KINETIS_SPI_SPI1_IRQ_PRIORITY           3
+#define KINETIS_SPI_SPI0_IRQ_PRIORITY           4
+#define KINETIS_SPI_SPI1_IRQ_PRIORITY           4
 
 /*
  * I2C system settings.
  */
 #define KINETIS_I2C_USE_I2C0                    TRUE
 #define KINETIS_I2C_USE_I2C1                    TRUE
-#define KINETIS_I2C_I2C0_PRIORITY               2
-#define KINETIS_I2C_I2C1_PRIORITY               2
+#define KINETIS_I2C_I2C0_PRIORITY               3
+#define KINETIS_I2C_I2C1_PRIORITY               3
 
 /*
  * ADC driver system settings.
@@ -165,8 +165,8 @@
  * I2S driver system settings.
  */
 #define KINETIS_I2S_USE_I2S1                  TRUE
-#define KINETIS_SPI_TX_PRIORITY               1
-#define KINETIS_SPI_RX_PRIORITY               1
+#define KINETIS_I2S_TX_PRIORITY               2
+#define KINETIS_I2S_RX_PRIORITY               2
 
 /*
  * Processor specific widths of each port.

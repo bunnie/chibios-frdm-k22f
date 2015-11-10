@@ -1393,7 +1393,7 @@ void i2s_lld_start(I2SDriver *i2sp) {
       i2sp->config->sai_tx_state.master_slave = i2sp->config->sai_tx_userconfig.slave_master;
 
       //    OSA_SemaCreate(&state->sem, 0);
-      nvicEnableVector(I2S0_Tx_IRQn, KINETIS_SPI_TX_PRIORITY);
+      nvicEnableVector(I2S0_Tx_IRQn, KINETIS_I2S_TX_PRIORITY);
 
       // this is a bit circular because we're using our default format spec to set
       // the format now -- but more generically, the data format can change dynamically
@@ -1421,7 +1421,7 @@ void i2s_lld_start(I2SDriver *i2sp) {
       i2sp->config->sai_rx_state.watermark = i2sp->config->sai_rx_userconfig.watermark;
       i2sp->config->sai_rx_state.master_slave = i2sp->config->sai_rx_userconfig.slave_master;
       //    OSA_SemaCreate(&state->sem, 0);
-      nvicEnableVector(I2S0_Rx_IRQn, KINETIS_SPI_RX_PRIORITY);
+      nvicEnableVector(I2S0_Rx_IRQn, KINETIS_I2S_RX_PRIORITY);
 
       SAI_DRV_RxConfigDataFormat(i2sp, &i2sp->config->sai_rx_state.format);
     }
