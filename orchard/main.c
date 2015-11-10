@@ -25,6 +25,7 @@
 #include "orchard.h"
 #include "orchard-shell.h"
 #include "orchard-events.h"
+#include "orchard-i2s.h"
 
 #include <string.h>
 
@@ -35,9 +36,8 @@ static const I2CConfig i2c_config = {
 };
 
 void i2s_handler(I2SDriver *i2sp, size_t offset, size_t n);
-#define NUM_RX_SAMPLES 512
-uint32_t rx_samples[NUM_RX_SAMPLES];
-uint32_t rx_savebuf[NUM_RX_SAMPLES];
+int32_t rx_samples[NUM_RX_SAMPLES];
+int32_t rx_savebuf[NUM_RX_SAMPLES];
 uint32_t rx_handler_count = 0;
 
 static I2SConfig i2s_config = {

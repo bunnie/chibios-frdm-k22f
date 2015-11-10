@@ -411,6 +411,7 @@ static void serve_rx_interrupt(I2SDriver *i2sp) {
   I2S_TypeDef * reg_base = i2sp->I2S;
   uint8_t i = 0;
   uint32_t len = i2sp->config->sai_rx_state.len;
+  uint32_t data;
 
   /* Judge if FIFO error */
   if(SAI_HAL_RxGetStateFlag(reg_base, kSaiStateFlagFIFOError)) {
@@ -427,7 +428,7 @@ static void serve_rx_interrupt(I2SDriver *i2sp) {
     }
     /* Read data from FIFO to the buffer */
     for( i = 0; i < space; i++ ) {
-      ((uint32_t *)i2sp->config->rx_buffer)[i2sp->config->sai_rx_state.count++] = reg_base->RDR[0];
+      ((int32_t *)i2sp->config->rx_buffer)[i2sp->config->sai_rx_state.count++] = (int32_t) reg_base->RDR[0];
     }
     
     /* Determine how full we are, and what type of callback has to happen */

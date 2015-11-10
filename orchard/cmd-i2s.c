@@ -44,13 +44,14 @@ void cmd_i2sdump(BaseSequentialStream *chp, int argc, char *argv[]) {
 
   if (argc > 0) {
     chprintf(chp, "Usage: d\r\n");
+    chprintf(chp, "Data is MSB-aligned, 18-bit wide 2's comp with zero pad on the LSB to 32 bits\r\n");
     return;
   }
 
   for( i = 0; i < 16; i++ ) {
     if( i % 8 == 0 )
       chprintf( chp, "\n\r%3x: ", i );
-    chprintf( chp, "%08x ", rx_savebuf[i] );
+    chprintf( chp, "%8ld ", rx_savebuf[i] >> 14 );
   }
   chprintf( chp, "\n\r" );
 }
