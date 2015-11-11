@@ -18,6 +18,7 @@
 #include "hal.h"
 #include "i2c.h"
 #include "i2s.h"
+#include "spi.h"
 
 #include "shell.h"
 #include "chprintf.h"
@@ -26,6 +27,7 @@
 #include "orchard-shell.h"
 #include "orchard-events.h"
 #include "orchard-i2s.h"
+#include "orchard-sd.h"
 
 #include <string.h>
 
@@ -39,6 +41,22 @@ void i2s_handler(I2SDriver *i2sp, size_t offset, size_t n);
 int32_t rx_samples[NUM_RX_SAMPLES];
 int32_t rx_savebuf[NUM_RX_SAMPLES];
 uint32_t rx_handler_count = 0;
+
+static const SPIConfig spi_config = {
+  NULL,
+  GPIOC,
+  4, 
+  KINETIS_SPI_TAR_SYSCLK_DIV_8(8)
+};
+
+static const MMCConfig mmc_config = { 
+  &SPID1,
+  &spi_config,
+  &spi_config
+};
+
+
+MMCDriver MMCD1;
 
 static I2SConfig i2s_config = {
   NULL,
@@ -99,6 +117,8 @@ static I2SConfig i2s_config = {
   }
 };
 
+extern event_source_t i2s_full_event;
+
 void i2s_handler(I2SDriver *i2sp, size_t offset, size_t n) {
   (void) i2sp;
   (void) offset;
@@ -108,6 +128,10 @@ void i2s_handler(I2SDriver *i2sp, size_t offset, size_t n) {
   // in the future, this would then kick off a SPI MMC data write event to save out the blocks
   rx_handler_count++;
   memcpy( rx_savebuf, rx_samples, NUM_RX_SAMPLES * sizeof(uint32_t) );
+  // kick out an event to write data to disk
+  //  chSysLockFromISR();
+  chEvtBroadcastI(&i2s_full_event);
+  // chSysUnlockFromISR();
 
 }
 
@@ -183,6 +207,10 @@ int main(void)
   chSysInit();
 
   i2sStart(&I2SD1, (const I2SConfig *) &i2s_config);
+  // spiStart(&SPID1, &spi_config);  // start handled by mmcStart
+  spiObjectInit(&SPID1);
+  mmcObjectInit(&MMCD1);
+  mmcStart(&MMCD1, &mmc_config); // driver, config
 
   evtTableInit(orchard_events, 32);
 

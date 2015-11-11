@@ -180,6 +180,18 @@ struct SPIDriver {
     SPIx_CTARn_ASC(0) | \
     SPIx_CTARn_DT(0)
 
+/* TAR settings for n bits at SYSCLK / 2 */
+#define KINETIS_SPI_TAR_SYSCLK_DIV_8(n)\
+    SPIx_CTARn_FMSZ((n) - 1) | \
+    SPIx_CTARn_CPOL | \
+    SPIx_CTARn_CPHA | \
+    SPIx_CTARn_DBR | \
+    SPIx_CTARn_PBR(0x0) | \
+    SPIx_CTARn_BR(0x2) | \
+    SPIx_CTARn_CSSCK(0x0) | \
+    SPIx_CTARn_ASC(0x0) | \
+    SPIx_CTARn_DT(0x1)
+
 /* TAR settings for n bits at SYSCLK / 4096 for debugging */
 #define KINETIS_SPI_TAR_SYSCLK_DIV_4096(n) \
     SPIx_CTARn_FMSZ(((n) - 1)) | \

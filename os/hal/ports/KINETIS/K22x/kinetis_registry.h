@@ -55,6 +55,7 @@
 /* SPI attributes */
 #define KINETIS_SPI0_IRQ_VECTOR     VectorA8
 #define KINETIS_SPI1_IRQ_VECTOR     VectorAC
+#define KINETIS_DMA0_IRQ_VECTOR     Vector40  // using DMA0_IRQn
 
 /* I2S attributes */
 #define KINETIS_I2S0_TX_VECTOR      VectorB0

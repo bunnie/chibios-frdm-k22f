@@ -54,8 +54,8 @@
 #define KINETIS_SPI0_TX_DMA_CHANNEL         1
 #endif
 
-#define DMAMUX_SPI_RX_SOURCE    16
-#define DMAMUX_SPI_TX_SOURCE    17
+#define DMAMUX_SPI_RX_SOURCE    14
+#define DMAMUX_SPI_TX_SOURCE    15
 
 /*===========================================================================*/
 /* Driver exported variables.                                                */
@@ -137,7 +137,7 @@ static void spi_stop_xfer(SPIDriver *spip)
 /* Driver interrupt handlers.                                                */
 /*===========================================================================*/
 
-OSAL_IRQ_HANDLER(Vector40) {
+OSAL_IRQ_HANDLER(KINETIS_DMA0_IRQ_VECTOR) {
   OSAL_IRQ_PROLOGUE();
 
   /* Clear bit 0 in Interrupt Request Register (INT) by writing 0 to CINT */
@@ -190,6 +190,8 @@ void spi_lld_start(SPIDriver *spip) {
       } else {
         spip->spi->CTAR[0] = KINETIS_SPI_TAR0_DEFAULT;
       }
+
+      // nvicEnableVector(SPI0_IRQn, KINETIS_SPI_SPI0_IRQ_PRIORITY);
     }
 #endif
 

@@ -15,6 +15,7 @@
 */
 
 #include "hal.h"
+#include "pal.h"
 
 #if HAL_USE_PAL || defined(__DOXYGEN__)
 /**
@@ -49,7 +50,7 @@ const PALConfig pal_default_config =
         /* PTB6*/ PAL_MODE_UNCONNECTED,     /* PTB7*/ PAL_MODE_UNCONNECTED,     /* PTB8*/ PAL_MODE_UNCONNECTED,
         /* PTB9*/ PAL_MODE_UNCONNECTED,     /*PTB10*/ PAL_MODE_UNCONNECTED,     /*PTB11*/ PAL_MODE_UNCONNECTED,
         /*PTB12*/ PAL_MODE_UNCONNECTED,     /*PTB13*/ PAL_MODE_UNCONNECTED,     /*PTB14*/ PAL_MODE_UNCONNECTED,
-        /*PTB15*/ PAL_MODE_UNCONNECTED,     /*PTB16*/ PAL_MODE_UNCONNECTED,     /*PTB17*/ PAL_MODE_UNCONNECTED,
+        /*PTB15*/ PAL_MODE_UNCONNECTED,     /*PTB16*/ PAL_MODE_INPUT_PULLUP,    /*PTB17*/ PAL_MODE_UNCONNECTED,
         /*PTB18*/ PAL_MODE_UNCONNECTED,     /*PTB19*/ PAL_MODE_UNCONNECTED,     /*PTB20*/ PAL_MODE_UNCONNECTED,
         /*PTB21*/ PAL_MODE_UNCONNECTED,     /*PTB22*/ PAL_MODE_UNCONNECTED,     /*PTB23*/ PAL_MODE_UNCONNECTED,
         /*PTB24*/ PAL_MODE_UNCONNECTED,     /*PTB25*/ PAL_MODE_UNCONNECTED,     /*PTB26*/ PAL_MODE_UNCONNECTED,
@@ -61,7 +62,7 @@ const PALConfig pal_default_config =
       .port = IOPORT3,  // PORTC
       .pads = {
         /* PTC0*/ PAL_MODE_UNCONNECTED,     /* PTC1*/ PAL_MODE_UNCONNECTED,     /* PTC2*/ PAL_MODE_UNCONNECTED,
-        /* PTC3*/ PAL_MODE_UNCONNECTED,     /* PTC4*/ PAL_MODE_UNCONNECTED,     /* PTC5*/ PAL_MODE_ALTERNATIVE_4,
+        /* PTC3*/ PAL_MODE_UNCONNECTED,     /* PTC4*/ PAL_MODE_ALTERNATIVE_2,   /* PTC5*/ PAL_MODE_ALTERNATIVE_4,
         /* PTC6*/ PAL_MODE_UNCONNECTED,     /* PTC7*/ PAL_MODE_ALTERNATIVE_4,   /* PTC8*/ PAL_MODE_ALTERNATIVE_4,
         /* PTC9*/ PAL_MODE_ALTERNATIVE_4,   /*PTC10*/ PAL_MODE_ALTERNATIVE_4,     /*PTC11*/ PAL_MODE_UNCONNECTED,
         /*PTC12*/ PAL_MODE_UNCONNECTED,     /*PTC13*/ PAL_MODE_UNCONNECTED,     /*PTC14*/ PAL_MODE_UNCONNECTED,
@@ -76,8 +77,8 @@ const PALConfig pal_default_config =
     {
       .port = IOPORT4,  // PORTD
       .pads = {
-        /* PTD0*/ PAL_MODE_UNCONNECTED,     /* PTD1*/ PAL_MODE_UNCONNECTED,     /* PTD2*/ PAL_MODE_UNCONNECTED,
-        /* PTD3*/ PAL_MODE_UNCONNECTED,     /* PTD4*/ PAL_MODE_UNCONNECTED,     /* PTD5*/ PAL_MODE_OUTPUT_PUSHPULL,
+        /* PTD0*/ PAL_MODE_UNCONNECTED,     /* PTD1*/ PAL_MODE_ALTERNATIVE_2,   /* PTD2*/ PAL_MODE_ALTERNATIVE_2,
+        /* PTD3*/ PAL_MODE_ALTERNATIVE_2,   /* PTD4*/ PAL_MODE_UNCONNECTED,     /* PTD5*/ PAL_MODE_OUTPUT_PUSHPULL,
         /* PTD6*/ PAL_MODE_UNCONNECTED,     /* PTD7*/ PAL_MODE_UNCONNECTED,     /* PTD8*/ PAL_MODE_UNCONNECTED,
         /* PTD9*/ PAL_MODE_UNCONNECTED,     /*PTD10*/ PAL_MODE_UNCONNECTED,     /*PTD11*/ PAL_MODE_UNCONNECTED,
         /*PTD12*/ PAL_MODE_UNCONNECTED,     /*PTD13*/ PAL_MODE_UNCONNECTED,     /*PTD14*/ PAL_MODE_UNCONNECTED,
@@ -108,6 +109,32 @@ const PALConfig pal_default_config =
     },
   },
 };
+#endif
+
+#if HAL_USE_MMC_SPI || defined(__DOXYGEN__)
+/**
+ * @brief   MMC_SPI card detection.
+ */
+bool mmc_lld_is_card_inserted(MMCDriver *mmcp) {
+
+  (void)mmcp;
+  if( palReadPad(GPIOB, 16) == PAL_HIGH) {
+    // floats high when no card is present
+    return false;
+  } else {
+    return true;
+  }
+}
+
+/**
+ * @brief   MMC_SPI card write protection detection.
+ */
+bool mmc_lld_is_write_protected(MMCDriver *mmcp) {
+
+  (void)mmcp;
+  // there is no write detect on this board, so always writeable
+  return false;
+}
 #endif
 
 /**
