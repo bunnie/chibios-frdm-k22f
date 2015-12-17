@@ -14,6 +14,8 @@
     limitations under the License.
 */
 
+#include <string.h>
+
 #include "ch.h"
 #include "shell.h"
 #include "chprintf.h"
@@ -27,10 +29,22 @@ event_source_t i2s_full_event;
 event_source_t i2s_reset_event;
 static thread_t *i2sthr = NULL;
 
+#define ENDURANCE_TEST 1
+
+#define ENDURANCE_OFFSET   2048 // stick it at offset 2048
+
 #define DATA_OFFSET_START  (1024 * 512) // starting block for data writes
+#if ENDURANCE_TEST
+#define DATA_LEN_BYTES     (32 * 1024 * 1024) // amount of data to save in bytes, about 300 seconds of audio
+#else
 #define DATA_LEN_BYTES     (2 * 1024 * 1024) // amount of data to save in bytes, about 10 seconds of audio
+#endif
 
 static uint32_t sd_offset = DATA_OFFSET_START;
+
+static uint32_t write_iters = 0;
+static uint32_t endurance_val = 0;
+static uint8_t endure_sector[512];
 
 void cmd_i2s(BaseSequentialStream *chp, int argc, char *argv[])
 {
@@ -77,8 +91,8 @@ void cmd_i2sstat(BaseSequentialStream *chp, int argc, char *argv[]) {
     return;
   }
 
-  chprintf( chp, "rx ints: %d, handler calls: %d, sd_offset: %d\n\r", 
-	    rx_int_count, rx_handler_count, sd_offset);
+  chprintf( chp, "rx ints: %d, handler calls: %d, sd_offset: %d, this run iters: %d total iters: %d\n\r", 
+	    rx_int_count, rx_handler_count, sd_offset, write_iters, endurance_val);
 }
 
 orchard_command("stat", cmd_i2sstat);
@@ -94,8 +108,19 @@ static void i2s_full_handler(eventid_t id) {
       return;
     }
     sd_offset += NUM_RX_SAMPLES * sizeof(int32_t);
+  } else {
+#if ENDURANCE_TEST
+    // if we're done recording, loop again
+    sd_offset = DATA_OFFSET_START;
+    write_iters++;
+    endurance_val++;
+    // update the endurance value sector
+    memcpy(endure_sector, &endurance_val, sizeof(uint32_t));
+    MMCD1.vmt->write(&MMCD1, ENDURANCE_OFFSET / MMCSD_BLOCK_SIZE, 
+		     (uint8_t *) endure_sector, 1);
+#endif
+    // if not doing endurance testing, do nothing
   }
-  // if we're done recording, return doing nothing
 }
 
 static void i2s_reset_handler(eventid_t id) {
@@ -143,6 +168,12 @@ void cmd_i2sthr(BaseSequentialStream *chp, int argc, char *argv[]) {
 
   if( !HAL_SUCCESS == MMCD1.vmt->connect(&MMCD1) )
     chprintf(chp, "mmcConnect() failed\n\r");
+
+  // read in the endurance sector
+  if( !HAL_SUCCESS == MMCD1.vmt->read(&MMCD1, ENDURANCE_OFFSET / MMCSD_BLOCK_SIZE, (uint8_t *) endure_sector, 1) ) {
+    chprintf(chp, "mmc_read failed\n\r");
+  }
+  memcpy(&endurance_val, endure_sector, sizeof(uint32_t));
 
   // init our event
   chEvtObjectInit(&i2s_full_event);
