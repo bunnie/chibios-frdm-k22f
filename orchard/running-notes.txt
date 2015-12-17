@@ -1,0 +1,4 @@
+Use i2sthr to start the I2S reading thread.
+Use i2s to start the actual sampling loop
+This will automatically write data to the SD card.
+Use sdunmount to flush the card prior to taking it out.
